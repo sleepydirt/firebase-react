@@ -11,7 +11,17 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   return (
-    <Container>
+    <Container
+      style={{
+        maxWidth: "600px",
+        border: "1px solid #fff",
+        borderRadius: "15px",
+        padding: "0.5rem 2rem",
+        margin: "30vh auto",
+        boxShadow:
+          "rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px",
+      }}
+    >
       <h1 className="my-3">Login to your account</h1>
       <Form>
         <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -22,9 +32,6 @@ export default function LoginPage() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-          <Form.Text className="text-muted">
-            We'll never share your email with anyone else.
-          </Form.Text>
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="formBasicPassword">
@@ -35,7 +42,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <a href="/signup">Sign up for an account</a>
+          <a href="/signup">New? Sign up for an account</a>
         </Form.Group>
         <Button
           variant="primary"
