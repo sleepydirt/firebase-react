@@ -1,10 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Container, Image, Nav, Navbar, Row } from "react-bootstrap";
+import {
+  Card,
+  Col,
+  Container,
+  Image,
+  Nav,
+  Navbar,
+  Row,
+  Form,
+  Button,
+} from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { storage, auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import {
   FaSignOutAlt,
@@ -13,6 +29,8 @@ import {
   FaRegCommentAlt,
   FaRegPaperPlane,
   FaHeart,
+  FaPencilAlt,
+  FaRegTrashAlt,
 } from "react-icons/fa";
 
 export default function PostPageDetails() {
@@ -25,6 +43,22 @@ export default function PostPageDetails() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
   const [isLiked, setIsLiked] = useState(false);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+
+  async function handleCommentSubmit(e) {
+    e.preventDefault();
+    if (!comment.trim()) return;
+
+    const postRef = doc(db, "posts", id);
+    await updateDoc(postRef, {
+      comments: arrayUnion({
+        text: comment,
+        author: user.email,
+      }),
+    });
+    setComment("");
+  }
 
   const toggleLike = () => {
     setIsLiked(!isLiked);
@@ -54,6 +88,7 @@ export default function PostPageDetails() {
     setCaption(post.caption);
     setImage(post.image);
     setOwner(post.owner);
+    setComments(post.comments || []);
   }
 
   useEffect(() => {
@@ -123,33 +158,67 @@ export default function PostPageDetails() {
           <Col>
             <Card style={{ border: "none" }}>
               <Card.Body style={{ padding: "1rem 10px" }}>
-                <Card.Text className="d-flex align-items-center">
-                  <span
-                    onClick={toggleLike}
-                    style={{ cursor: "pointer", marginRight: "0.5rem" }}
-                  >
-                    {isLiked ? (
-                      <FaHeart size={"26px"} color="red" />
-                    ) : (
-                      <FaRegHeart size={"26px"} />
-                    )}
-                  </span>
+                <Card.Text className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span
+                      onClick={toggleLike}
+                      style={{ cursor: "pointer", marginRight: "0.5rem" }}
+                    >
+                      {isLiked ? (
+                        <FaHeart size={"26px"} color="red" />
+                      ) : (
+                        <FaRegHeart size={"26px"} />
+                      )}
+                    </span>
+                    <span>
+                      <FaRegCommentAlt
+                        size={"1.5rem"}
+                        style={{ marginRight: "0.5rem" }}
+                      />
+                      <FaRegPaperPlane size={"1.5rem"} />
+                    </span>
+                  </div>
                   <span>
-                    <FaRegCommentAlt
-                      size={"1.5rem"}
-                      style={{ marginRight: "0.5rem" }}
-                    />
-                    <FaRegPaperPlane size={"1.5rem"} />
+                    <Card.Link
+                      href={`/update/${id}`}
+                      style={{ color: "black" }}
+                    >
+                      <FaPencilAlt size={"1.5rem"} />
+                    </Card.Link>
+                    <Card.Link
+                      onClick={() => deletePost(id)}
+                      style={{ cursor: "pointer", color: "black" }}
+                    >
+                      <FaRegTrashAlt size={"1.5rem"} />
+                    </Card.Link>
                   </span>
                 </Card.Text>
                 <Card.Text>{caption}</Card.Text>
-                <Card.Link href={`/update/${id}`}>Edit</Card.Link>
-                <Card.Link
-                  onClick={() => deletePost(id)}
-                  style={{ cursor: "pointer" }}
-                >
-                  Delete
-                </Card.Link>
+                <Card.Text>
+                  <h6>Comments</h6>
+                  {comments.map((comment, index) => (
+                    <p key={index}>
+                      <strong>{comment.author}:</strong> {comment.text}
+                    </p>
+                  ))}
+                </Card.Text>
+                <Form onSubmit={handleCommentSubmit}>
+                  <Form.Group>
+                    <Row>
+                      <Col xs="10">
+                        <Form.Control
+                          type="text"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          placeholder="Add a comment..."
+                        />
+                      </Col>
+                      <Col xs="2" className="text-end">
+                        <Button type="submit">Post</Button>
+                      </Col>
+                    </Row>
+                  </Form.Group>
+                </Form>
               </Card.Body>
             </Card>
           </Col>
