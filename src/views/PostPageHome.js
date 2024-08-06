@@ -9,6 +9,7 @@ export default function PostPageHome() {
 
   async function getAllPosts() {
     const query = await getDocs(collection(db, "posts"));
+    // console.log(query.docs[0].data());
     const posts = query.docs.map((doc) => {
       return { id: doc.id, ...doc.data() };
     });
@@ -46,7 +47,7 @@ function ImageSquare({ post }) {
   const { image, id } = post;
   return (
     <Link
-      to={`post/${id}`}
+      to={`posts/${id}`}
       style={{
         width: "18rem",
         marginLeft: "1rem",
