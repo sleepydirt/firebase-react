@@ -29,8 +29,10 @@ export default function PostPageHome() {
       <Navbar variant="light" bg="light">
         <Container>
           <Navbar.Brand href="/">Tinkergram</Navbar.Brand>
-          <Nav>
-            <Nav.Link href="/add">New Post</Nav.Link>
+          <Nav className="align-items-center">
+            <Nav.Link href="/add" className="d-flex align-items-center">
+              New Post
+            </Nav.Link>
           </Nav>
         </Container>
       </Navbar>

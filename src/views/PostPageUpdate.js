@@ -6,6 +6,7 @@ import { auth, db, storage } from "../firebase";
 import { signOut } from "firebase/auth";
 import { updateDoc, doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { FaSignOutAlt, FaPlus } from "react-icons/fa";
 
 export default function PostPageUpdate() {
   const params = useParams();
@@ -16,6 +17,7 @@ export default function PostPageUpdate() {
   const [imageFile, setImageFile] = useState("");
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState("");
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -51,6 +53,11 @@ export default function PostPageUpdate() {
     if (loading) return;
     if (!user) navigate("/login");
     getPost(id);
+
+    if (user && user.email) {
+      setUserEmail(user.email);
+    }
+
     return () => {
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
@@ -63,9 +70,25 @@ export default function PostPageUpdate() {
       <Navbar variant="light" bg="light">
         <Container>
           <Navbar.Brand href="/">Tinkergram</Navbar.Brand>
-          <Nav>
-            <Nav.Link href="/add">New Post</Nav.Link>
-            <Nav.Link onClick={(e) => signOut(auth)}>🚪</Nav.Link>
+          <Nav className="align-items-center">
+            <Nav.Link className="d-flex align-items-center">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
+                width={"32px"}
+                alt="profile"
+                style={{ borderRadius: "50%" }}
+              />
+              <span className="ms-2">{userEmail}</span>
+            </Nav.Link>
+            <Nav.Link href="/add" className="d-flex align-items-center">
+              <FaPlus />
+            </Nav.Link>
+            <Nav.Link
+              onClick={(e) => signOut(auth)}
+              className="d-flex align-items-center"
+            >
+              <FaSignOutAlt />
+            </Nav.Link>
           </Nav>
         </Container>
       </Navbar>
@@ -86,7 +109,7 @@ export default function PostPageUpdate() {
             <Form.Label>Caption</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Lovely day"
+              placeholder="Enter your caption"
               value={caption}
               onChange={(text) => setCaption(text.target.value)}
             />
