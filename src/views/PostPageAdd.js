@@ -3,24 +3,44 @@ import { Button, Container, Form, Nav, Navbar } from "react-bootstrap";
 import { addDoc, collection } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import { signOut } from "firebase/auth";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export default function PostPageAdd() {
   const [user, loading] = useAuthState(auth);
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
   const navigate = useNavigate();
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
   async function addPost() {
-    await addDoc(collection(db, "posts"), { caption, image });
+    const imageReference = ref(storage, `images/${image.name}`);
+    const response = await uploadBytes(imageReference, image);
+    const imageUrl = await getDownloadURL(response.ref);
+    await addDoc(collection(db, "posts"), { caption, image: imageUrl });
     navigate("/");
   }
 
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate("/login");
-  }, [navigate, user, loading]);
+
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [navigate, user, loading, imagePreview]);
 
   return (
     <>
@@ -57,17 +77,15 @@ export default function PostPageAdd() {
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="image">
-            <Form.Label>Image URL</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="https://"
-              value={image}
-              onChange={(text) => setImage(text.target.value)}
-            />
-            <Form.Text className="text-muted">
-              Make sure the url has a image type at the end: jpg, jpeg, png.
-            </Form.Text>
-            <img src={image} style={{ width: "100%" }} alt="" />
+            <Form.Label>Image</Form.Label>
+            <Form.Control type="file" onChange={handleImageChange} />
+            {imagePreview && (
+              <img
+                src={imagePreview}
+                style={{ width: "100%", marginTop: "10px" }}
+                alt=""
+              />
+            )}
           </Form.Group>
           <Button variant="primary" onClick={async (e) => addPost()}>
             Submit

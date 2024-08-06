@@ -2,20 +2,41 @@ import React, { useEffect, useState } from "react";
 import { Button, Container, Form, Nav, Navbar } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import { signOut } from "firebase/auth";
 import { updateDoc, doc, getDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export default function PostPageUpdate() {
   const params = useParams();
   const id = params.id;
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageFile, setImageFile] = useState("");
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    } else {
+      setImageFile(null);
+      setImagePreview("");
+    }
+  };
+
   async function updatePost() {
-    await updateDoc(doc(db, "posts", id), { caption, image });
+    let imageUrl = image;
+    if (imageFile) {
+      const imageReference = ref(storage, `images/${imageFile.name}`);
+      const response = await uploadBytes(imageReference, imageFile);
+      imageUrl = await getDownloadURL(response.ref);
+    }
+    await updateDoc(doc(db, "posts", id), { caption, image: imageUrl });
     navigate("/");
   }
 
@@ -30,7 +51,12 @@ export default function PostPageUpdate() {
     if (loading) return;
     if (!user) navigate("/login");
     getPost(id);
-  }, [id, navigate, user, loading]);
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [id, navigate, user, loading, imagePreview]);
 
   return (
     <div>
@@ -67,17 +93,22 @@ export default function PostPageUpdate() {
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="image">
-            <Form.Label>Image URL</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="https://zca.sg/img/1"
-              value={image}
-              onChange={(text) => setImage(text.target.value)}
-            />
-            <Form.Text className="text-muted">
-              Make sure the url has a image type at the end: jpg, jpeg, png.
-            </Form.Text>
-            <img src={image} style={{ width: "100%" }} alt="" />
+            <Form.Label>Image</Form.Label>
+            <Form.Control type="file" onChange={handleImageChange} />
+            <div style={{ marginTop: "10px" }}>
+              {/* This uses a ternary operator to handle image previewing:
+                If imagePreview exists (user has uploaded a new img), then render it;
+                else it will render the original image.  */}
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  style={{ width: "100%" }}
+                  alt="preview"
+                />
+              ) : image ? (
+                <img src={image} style={{ width: "100%" }} alt="" />
+              ) : null}
+            </div>
           </Form.Group>
           <Button variant="primary" onClick={(e) => updatePost()}>
             Submit

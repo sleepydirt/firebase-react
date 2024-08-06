@@ -46,20 +46,29 @@ export default function PostPageDetails() {
       <Container>
         <Row
           style={{
-            maxWidth: "800px",
+            maxWidth: "600px",
             border: "1px solid #fff",
             borderRadius: "15px",
-            padding: "0.5rem",
-            margin: "30vh auto auto",
+            padding: "0",
+            margin: "20vh auto auto",
             boxShadow:
               "rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px",
           }}
         >
-          <Col md="6">
+          <Col className="my-3 d-flex align-items-center">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
+              width={"32px"}
+              alt="profile"
+              style={{ borderRadius: "50%" }}
+            />
+            <span className="ms-2">User</span>
+          </Col>
+          <Col xxl="12">
             <Image src={image} style={{ width: "100%" }} />
           </Col>
           <Col>
-            <Card>
+            <Card style={{ border: "none" }}>
               <Card.Body>
                 <Card.Text>{caption}</Card.Text>
                 <Card.Link href={`/update/${id}`}>Edit</Card.Link>
